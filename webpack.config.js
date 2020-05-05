@@ -1,29 +1,59 @@
 const path = require('path');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
 
-module.exports = {
+var main = {
   mode: 'development',
-  entry: './src/index.ts',
-  devtool: 'inline-source-map',
-  devServer: {
-    contentBase: './dist',
-    hot: true
+  target: 'electron-main',
+  entry: path.join(__dirname, 'src', 'index'),
+  output: {
+    filename: 'index.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  node: {
+    __dirname: false,
+    __filename: false
   },
   module: {
-    rules: [
-      {
-        test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/,
-      },
-    ],
+    rules: [{
+      test: /.ts?$/,
+      include: [
+        path.resolve(__dirname, 'src'),
+      ],
+      exclude: [
+        path.resolve(__dirname, 'node_modules'),
+      ],
+      loader: 'ts-loader',
+    }]
   },
   resolve: {
-    extensions: [ '.tsx', '.ts', '.js' ],
+    extensions: ['.js', '.ts']
   },
-  output: {
-    filename: 'index_bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-  },
-  plugins: [new HtmlWebpackPlugin()]
 };
+
+var renderer = {
+  mode: 'development',
+  target: 'electron-renderer',
+  entry: path.join(__dirname, 'src', 'renderer', 'index'),
+  output: {
+    filename: 'index.js',
+    path: path.resolve(__dirname, 'dist', 'scripts')
+  },
+  resolve: {
+    extensions: ['.json', '.js', '.jsx', '.css', '.ts', '.tsx']
+  },
+  module: {
+    rules: [{
+      test: /\.(tsx|ts)$/,
+      use: [
+        'ts-loader'
+      ],
+      include: [
+        path.resolve(__dirname, 'src'),
+        path.resolve(__dirname, 'node_modules'),
+      ],
+    }]
+  },
+};
+
+module.exports = [
+  main, renderer
+];

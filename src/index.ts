@@ -1,27 +1,47 @@
-import * as _ from 'lodash';
+const { BrowserWindow, app, App, } = require('electron')
 
-function component() {
-  const element = document.createElement('div');
+class SampleApp {
+    private mainWindow: typeof BrowserWindow | null = null;
+    private app: typeof App;
+    private mainURL: string = `file://${__dirname}/index.html`
 
-  element.innerHTML = _.join(['Hello', 'webpack'], ' ');
-  return element;
+    constructor(app: typeof App) {
+        this.app = app;
+        this.app.on('window-all-closed', this.onWindowAllClosed.bind(this))
+        this.app.on('ready', this.create.bind(this));
+        this.app.on('activate', this.onActivated.bind(this));
+    }
+
+    private onWindowAllClosed() {
+        this.app.quit();
+    }
+
+    private create() {
+        this.mainWindow = new BrowserWindow({
+            width: 800,
+            height: 400,
+            minWidth: 500,
+            minHeight: 200,
+            acceptFirstMouse: true,
+            titleBarStyle: 'hidden'
+        });
+
+        this.mainWindow.loadURL(this.mainURL);
+
+        this.mainWindow.on('closed', () => {
+            this.mainWindow = null;
+        });
+    }
+
+    private onReady() {
+        this.create();
+    }
+
+    private onActivated() {
+        if (this.mainWindow === null) {
+            this.create();
+        }
+    }
 }
 
-async function getDeviceList(){
-  let device = await navigator.usb.requestDevice({
-    'filters': [
-      {'classCode': 3} // USB HID devices
-    ]
-  })
-  await device.open()
-  await device.selectConfiguration(1)
-  await device.claimInterface(0)
-  let data = await device.transferIn(1, 8)
-  console.log(data)
-}
-
-document.body.appendChild(component());
-const button = document.createElement('BUTTON')
-button.innerText = 'click me'
-button.onclick = getDeviceList
-document.body.appendChild(button)
+const MyApp: SampleApp = new SampleApp(app)
